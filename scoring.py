@@ -10,9 +10,13 @@ and neither function has been checked against bad input.
 3. Find 2-3 "breaker" inputs for session_rating() and decide if they need handling.
 """
 
+from scoring_helpers import apply_streak_bonus
 
-def session_rating(combined_score: int) -> str:
+
+def session_rating(combined_score: float) -> str:
     """Rate a study session from its combined minutes+focus score. Correct and tested."""
+    if not 0 <= combined_score <= 100:
+        raise ValueError(f"combined_score must be between 0 and 100, got {combined_score}")
     if combined_score >= 90:
         return "Great"
     if combined_score >= 80:
@@ -24,12 +28,6 @@ def session_rating(combined_score: int) -> str:
     return "Skip"
 
 
-def apply_streak_bonus(combined_score: int, streak_days: int) -> int:
-    """Add a bonus for consecutive study days, capped at 100. Works fine -- it's just in the wrong file."""
-    boosted = combined_score + streak_days * 2
-    return min(boosted, 100)
-
-
 def render_session_scorer_tab():
     import streamlit as st
 
@@ -39,18 +37,24 @@ def render_session_scorer_tab():
     streak = st.number_input("Current streak (days)", min_value=0, value=0, step=1)
 
     combined = minutes + focus
-    boosted = apply_streak_bonus(combined, streak)
-    rating = session_rating(boosted)
-    st.metric("Rating", rating, help=f"Combined {combined} -> boosted {boosted}")
+    try:
+        boosted = apply_streak_bonus(combined, streak)
+        rating = session_rating(boosted)
+        st.metric("Rating", rating, help=f"Combined {combined} -> boosted {boosted}")
+    except ValueError as e:
+        st.error(str(e))
 
 
 def run_demo():
-    sessions = [55, 68, 82, 91, 77]
+    sessions = [55, 68, 82, 91, 77, 111, 99.9, -1, 99]
     streak = 3
     for raw in sessions:
-        boosted = apply_streak_bonus(raw, streak)
-        rating = session_rating(boosted)
-        print(f"Raw: {raw} -> Boosted: {boosted} -> Rating: {rating}")
+        try:
+            boosted = apply_streak_bonus(raw, streak)
+            rating = session_rating(boosted)
+            print(f"Raw: {raw} -> Boosted: {boosted} -> Rating: {rating}")
+        except ValueError as e:
+            print(f"Raw: {raw} -> Error: {e}")
 
 
 if __name__ == "__main__":

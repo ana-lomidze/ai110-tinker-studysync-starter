@@ -1,2 +1,14 @@
-<!-- Save your AI-generated Mermaid flowchart source here (Tinker 3B, Part 4). -->
-<!-- Replace this comment with a fenced ```mermaid``` code block: input -> process/score -> output. -->
+```mermaid
+flowchart TD
+    A["CSV input<br/>data/study_spots.csv"] --> B["load_study_spots()<br/>parse rows, convert distance to float and seats to int"]
+    P["Student profile<br/>max_noise, max_distance, min_seats"] --> C
+    B --> C["Scoring: score_study_spot()<br/>for each spot"]
+    C --> C1["Noise match: +2 exact, +1 adjacent, +0 otherwise"]
+    C --> C2["Distance within max: +1"]
+    C --> C3["Seats at least min: +2"]
+    C1 --> D["(score, reasons) per spot"]
+    C2 --> D
+    C3 --> D
+    D --> E["Ranking: rank_study_spots()<br/>sort by score descending, keep top k=3"]
+    E --> F["Formatted output: format_results()<br/>'N. Name -- Score: X -- Because: reasons'"]
+```
